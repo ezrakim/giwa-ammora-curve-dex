@@ -1,0 +1,1507 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AMMORA // CURVE_GRADUATION_DEX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #050805;
+      --panel: #0a100a;
+      --border: #1e4d2b;
+      --border-bright: #33ff66;
+      --text: #33ff66;
+      --text-dim: #1d8a3a;
+      --amber: #ffb000;
+      --danger: #ff3b30;
+    }
+
+    * {
+      box-sizing: border-box;
+      border-radius: 0 !important;
+    }
+
+    body {
+      margin: 0;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: "JetBrains Mono", "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.16) 0px,
+        rgba(0, 0, 0, 0.16) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .terminal-shell {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .hud-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid var(--border-bright);
+      background: var(--panel);
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 0 12px rgba(51, 255, 102, 0.12);
+    }
+
+    .hud-title {
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.08em;
+    }
+
+    .hud-sub {
+      color: var(--text-dim);
+      font-size: 11px;
+    }
+
+    .wallet-picker {
+      display: none;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      border: 1px dashed var(--amber);
+      background: #0c1208;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      font-size: 12px;
+    }
+
+    .grid-main {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 820px) {
+      .grid-main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      padding: 14px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      gap: 8px;
+    }
+
+    .tab-bar,
+    .manual-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .token-list {
+      max-height: 420px;
+      overflow-y: auto;
+    }
+
+    .token-row {
+      border: 1px solid var(--border);
+      padding: 10px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+
+    .token-row:hover,
+    .token-row.active {
+      border-color: var(--border-bright);
+      background: rgba(51, 255, 102, 0.08);
+    }
+
+    .badge {
+      font-size: 11px;
+      padding: 2px 6px;
+      border: 1px solid currentColor;
+    }
+
+    .badge.active { color: var(--text); }
+    .badge.ready { color: var(--amber); animation: blink 1.2s infinite; }
+    .badge.graduated { color: var(--text-dim); }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+
+    .btn {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border-bright);
+      padding: 8px 12px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: var(--text);
+      color: var(--bg);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+
+    .btn-active {
+      background: var(--text);
+      color: var(--bg);
+    }
+
+    .btn-amber {
+      color: var(--amber);
+      border-color: var(--amber);
+    }
+
+    .btn-amber:hover:not(:disabled) {
+      background: var(--amber);
+      color: var(--bg);
+    }
+
+    .btn-amber-active {
+      background: var(--amber);
+      color: var(--bg);
+      border-color: var(--amber);
+    }
+
+    .btn-danger {
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: var(--danger);
+      color: var(--bg);
+    }
+
+    .input-box {
+      width: 100%;
+      background: #020402;
+      color: var(--text);
+      border: 1px solid var(--border-bright);
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .field-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+
+    .quote-box {
+      border: 1px dashed var(--border);
+      padding: 10px;
+      font-size: 12px;
+    }
+
+    .log-console {
+      margin-top: 16px;
+      border: 1px solid var(--border);
+      background: #020402;
+      padding: 10px 12px;
+      height: 215px;
+      overflow-y: auto;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .log-line.ok { color: var(--text); }
+    .log-line.warn { color: var(--amber); }
+    .log-line.err { color: var(--danger); }
+    .log-line a { color: inherit; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="terminal-shell">
+    <header class="hud-header">
+      <div>
+        <div class="hud-title">[ AMMORA // CURVE_GRADUATION_DEX ]</div>
+        <div class="hud-sub">
+          NET: GIWA_SEPOLIA(91342) | V4_BONDING_CURVE | <span id="sdk-status">SDK: LOADING...</span>
+        </div>
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+        <span id="wallet-balance" style="font-size:11px; color:var(--amber); display:none;"></span>
+        <a href="https://docs.giwa.io/get-started/faucets" target="_blank" rel="noreferrer" class="btn">[FAUCET]</a>
+        <button id="btn-reauth" class="btn btn-amber" style="display:none;" title="지갑 계정 권한 재승인">[RE-AUTH]</button>
+        <button id="btn-connect" class="btn">[LINK_WALLET]</button>
+      </div>
+    </header>
+
+    <div id="wallet-picker" class="wallet-picker">
+      <span style="color:var(--amber); font-weight:700;">&gt; SELECT_EVM_WALLET:</span>
+      <div id="wallet-picker-buttons" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+    </div>
+
+    <main class="grid-main">
+      <section class="panel">
+        <div class="panel-header">
+          <span>:: 01_BONDING_CURVE_INDEX</span>
+          <button id="btn-sync-api" class="btn btn-sm">[SYNC_API]</button>
+        </div>
+
+        <div class="manual-bar">
+          <input
+            id="input-manual-curve"
+            class="input-box"
+            type="text"
+            placeholder="0x... 기존 커브 주소 직접 로드"
+            style="font-size:11px;"
+          />
+          <button id="btn-load-manual" class="btn btn-amber">[+ LOAD]</button>
+        </div>
+
+        <div id="token-list" class="token-list"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <span>:: 02_EXECUTION_UNIT</span>
+          <span id="selected-symbol" style="color: var(--text-dim);">NO_TARGET</span>
+        </div>
+
+        <div class="tab-bar">
+          <button id="tab-trade" class="btn btn-active" style="flex:1;">[ TRADE / GRADUATE ]</button>
+          <button id="tab-launch" class="btn btn-amber" style="flex:1;">[ + NEW_CURVE ]</button>
+        </div>
+
+        <div id="view-trade">
+          <div id="exec-empty" style="color: var(--text-dim); padding: 20px 0;">
+            &gt; 좌측에서 커브를 선택하거나 상단 [+ NEW_CURVE] 탭에서 직접 새 본딩커브를 생성하세요.
+          </div>
+
+          <div id="exec-panel" style="display:none; flex-direction:column; gap:12px;">
+            <div style="display:flex; gap:8px;">
+              <button id="btn-mode-buy" class="btn btn-active" style="flex:1;">[ BUY ]</button>
+              <button id="btn-mode-sell" class="btn" style="flex:1;">[ SELL ]</button>
+            </div>
+
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span id="input-label" class="field-label" style="margin-bottom:0;">INPUT_AMOUNT (ETH)</span>
+                <span id="holding-bal-text" style="font-size:11px; color:var(--amber);">HELD: -</span>
+              </div>
+              <input id="input-amount" class="input-box" type="number" step="0.001" value="0.001" />
+            </div>
+
+            <div class="quote-box">
+              <div>HELD_BALANCE : <span id="quote-held-bal" style="color:var(--amber); font-weight:700;">-</span></div>
+              <div>EST_OUTPUT : <span id="quote-output">-</span></div>
+              <div>CURVE_FILL : <span id="quote-fill">0.0%</span></div>
+              <div>CURVE_ADDR : <span id="quote-curve-addr" style="font-size:10px; color:var(--text-dim);">-</span></div>
+              <div id="partial-warn" style="color:var(--amber); margin-top:4px; display:none;">
+                ! WARN: GRADUATION_BOUNDARY — 잔여 금액 자동 반환 예정
+              </div>
+            </div>
+
+            <div style="display:flex; gap:8px;">
+              <button id="btn-quote" class="btn">[1. QUOTE]</button>
+              <button id="btn-swap" class="btn" style="flex:1;" disabled>[2. EXECUTE_BUY]</button>
+            </div>
+
+            <div style="border-top: 1px dashed var(--border); padding-top: 12px;">
+              <div style="font-size:11px; color:var(--amber); margin-bottom:6px;">
+                &gt; PERMISSIONLESS_GRADUATION_TRIGGER
+              </div>
+              <button id="btn-graduate" class="btn btn-amber" style="width:100%;" disabled>
+                LOCKED (ACTIVE)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="view-launch" style="display:none; flex-direction:column; gap:10px;">
+          <div style="font-size:11px; color:var(--amber); border:1px dashed var(--amber); padding:8px;">
+            &gt; GIWA Sepolia V4 Factory에 새 토큰 + 본딩커브를 즉시 배포합니다.<br/>
+            &gt; (Config #6은 공식 권고에 따라 차단)
+          </div>
+
+          <div>
+            <div class="field-label" style="display:flex; justify-content:space-between; align-items:center;">
+              <span>V4_CONFIG_ID</span>
+              <span style="display:flex; gap:4px;">
+                <button type="button" class="btn btn-sm cfg-preset" data-id="1">#1</button>
+                <button type="button" class="btn btn-sm cfg-preset" data-id="2">#2</button>
+                <button type="button" class="btn btn-sm cfg-preset" data-id="10">#10</button>
+              </span>
+            </div>
+            <input id="launch-config-id" class="input-box" type="number" min="1" value="1" />
+          </div>
+
+          <div>
+            <div class="field-label">TOKEN_NAME</div>
+            <input id="launch-name" class="input-box" type="text" value="ROBOT_UNIT_01" />
+          </div>
+
+          <div>
+            <div class="field-label">TOKEN_SYMBOL (TICKER)</div>
+            <input id="launch-symbol" class="input-box" type="text" value="RBT01" />
+          </div>
+
+          <div>
+            <div class="field-label">TOKEN_DECIMALS (기본 18)</div>
+            <input id="launch-decimals" class="input-box" type="number" min="6" max="18" value="18" />
+          </div>
+
+          <button id="btn-deploy-curve" class="btn btn-amber" style="width:100%; margin-top:4px;" disabled>
+            [ DEPLOY_V4_BONDING_CURVE() ]
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <section id="log-console" class="log-console"></section>
+  </div>
+
+  <script type="module">
+    const GIWA_CHAIN_ID_NUM = 91342;
+    const GIWA_CHAIN_ID_HEX = "0x164ce";
+    const GIWA_RPC_URL = "https://sepolia-rpc.giwa.io";
+    const EXPLORER_URL = "https://sepolia-explorer.giwa.io";
+    const AMMORA_PROXY_URL = `${window.location.origin}/api`;
+    const LOCAL_STORAGE_KEY = "giwa_ammora_local_curves_v1";
+    const DEFAULT_OP_WETH = "0x4200000000000000000000000000000000000006";
+
+    const ERC20_ABI = [
+      { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ name: "owner", type: "address" }], outputs: [{ name: "", type: "uint256" }] },
+      { type: "function", name: "allowance", stateMutability: "view", inputs: [{ name: "owner", type: "address" }, { name: "spender", type: "address" }], outputs: [{ name: "", type: "uint256" }] },
+      { type: "function", name: "approve", stateMutability: "nonpayable", inputs: [{ name: "spender", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ name: "", type: "bool" }] },
+      { type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ name: "", type: "uint8" }] },
+      { type: "function", name: "symbol", stateMutability: "view", inputs: [], outputs: [{ name: "", type: "string" }] },
+      { type: "function", name: "deposit", stateMutability: "payable", inputs: [], outputs: [] },
+    ];
+
+    const CURVE_META_ABI = [
+      { type: "function", name: "quoteToken", stateMutability: "view", inputs: [], outputs: [{ name: "", type: "address" }] },
+      { type: "function", name: "baseToken", stateMutability: "view", inputs: [], outputs: [{ name: "", type: "address" }] },
+      { type: "function", name: "token", stateMutability: "view", inputs: [], outputs: [{ name: "", type: "address" }] },
+    ];
+
+    let viemMod = null;
+    let sdkMod = null;
+    let publicClient = null;
+    let giwaContracts = {
+      factory: null,
+      configRegistry: null,
+      feePolicy: null,
+      weth: DEFAULT_OP_WETH,
+      protocolVersion: 4,
+    };
+
+    const discoveredWallets = new Map();
+    let activeProvider = null;
+    let activeWalletName = "";
+    let address = null;
+    let heldTokenRaw = 0n;
+    let heldTokenDecimals = 18;
+    let tokens = loadSavedLocalCurves();
+    let selected = tokens[0] ?? null;
+    let activeTab = "TRADE";
+    let mode = "BUY";
+    let busy = false;
+
+    const elSdkStatus = document.getElementById("sdk-status");
+    const elWalletBalance = document.getElementById("wallet-balance");
+    const elWalletPicker = document.getElementById("wallet-picker");
+    const elWalletPickerBtns = document.getElementById("wallet-picker-buttons");
+    const elBtnReauth = document.getElementById("btn-reauth");
+    const elBtnConnect = document.getElementById("btn-connect");
+    const elBtnSyncApi = document.getElementById("btn-sync-api");
+    const elInputManual = document.getElementById("input-manual-curve");
+    const elBtnLoadManual = document.getElementById("btn-load-manual");
+    const elTokenList = document.getElementById("token-list");
+    const elSelectedSymbol = document.getElementById("selected-symbol");
+
+    const elTabTrade = document.getElementById("tab-trade");
+    const elTabLaunch = document.getElementById("tab-launch");
+    const elViewTrade = document.getElementById("view-trade");
+    const elViewLaunch = document.getElementById("view-launch");
+
+    const elExecEmpty = document.getElementById("exec-empty");
+    const elExecPanel = document.getElementById("exec-panel");
+    const elBtnBuy = document.getElementById("btn-mode-buy");
+    const elBtnSell = document.getElementById("btn-mode-sell");
+    const elInputLabel = document.getElementById("input-label");
+    const elHoldingBalText = document.getElementById("holding-bal-text");
+    const elInputAmount = document.getElementById("input-amount");
+    const elQuoteHeldBal = document.getElementById("quote-held-bal");
+    const elQuoteOutput = document.getElementById("quote-output");
+    const elQuoteFill = document.getElementById("quote-fill");
+    const elQuoteCurveAddr = document.getElementById("quote-curve-addr");
+    const elPartialWarn = document.getElementById("partial-warn");
+    const elBtnQuote = document.getElementById("btn-quote");
+    const elBtnSwap = document.getElementById("btn-swap");
+    const elBtnGraduate = document.getElementById("btn-graduate");
+
+    const elLaunchConfigId = document.getElementById("launch-config-id");
+    const elLaunchName = document.getElementById("launch-name");
+    const elLaunchSymbol = document.getElementById("launch-symbol");
+    const elLaunchDecimals = document.getElementById("launch-decimals");
+    const elBtnDeployCurve = document.getElementById("btn-deploy-curve");
+    const elLogConsole = document.getElementById("log-console");
+
+    function loadSavedLocalCurves() {
+      try {
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveLocalCurves() {
+      try {
+        const locals = tokens.filter((t) => t.isLocal);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(locals));
+      } catch {}
+    }
+
+    function pushLog(level, msg, txHash = null) {
+      const ts = new Date().toTimeString().slice(0, 8);
+      const line = document.createElement("div");
+      line.className = `log-line ${level}`;
+      if (txHash) {
+        line.innerHTML = `[${ts}] ${msg} <a href="${EXPLORER_URL}/tx/${txHash}" target="_blank" rel="noreferrer">[VIEW_TX]</a>`;
+      } else {
+        line.textContent = `[${ts}] ${msg}`;
+      }
+      elLogConsole.prepend(line);
+    }
+
+    function renderAsciiBar(pct) {
+      const total = 16;
+      const filled = Math.round((pct / 100) * total);
+      return `[${"█".repeat(filled)}${"░".repeat(total - filled)}] ${pct.toFixed(1)}%`;
+    }
+
+    function formatUnitsSafe(val, decimals = 18) {
+      try {
+        const bn = typeof val === "bigint" ? val : BigInt(val || "0");
+        const dec = Number(decimals) || 18;
+        const base = 10n ** BigInt(dec);
+        const whole = bn / base;
+        const frac = (bn % base).toString().padStart(dec, "0").slice(0, 4);
+        return `${whole}.${frac}`;
+      } catch {
+        return "0.0000";
+      }
+    }
+
+    function parseUnitsSafe(valStr, decimals = 18) {
+      const cleaned = String(valStr || "0").trim();
+      const dec = Number(decimals) || 18;
+      const [whole = "0", frac = ""] = cleaned.split(".");
+      const fracPadded = (frac + "0".repeat(dec)).slice(0, dec);
+      return BigInt(whole || "0") * (10n ** BigInt(dec)) + BigInt(fracPadded || "0");
+    }
+
+    function toHexValue(val) {
+      if (val == null) return "0x0";
+      const bn = typeof val === "bigint" ? val : BigInt(val);
+      return "0x" + bn.toString(16);
+    }
+
+    function resolveGiwaContractsFromSdk(mod) {
+      const dep = mod?.giwaSepoliaAutoRouteDeployment ?? mod?.giwaSepoliaDeployment ?? null;
+      const launch = dep?.contracts?.launch ?? dep?.launch ?? null;
+      const weth =
+        dep?.tokens?.weth ??
+        dep?.contracts?.weth ??
+        dep?.contracts?.wrappedNative ??
+        DEFAULT_OP_WETH;
+      return {
+        factory: typeof launch?.factory === "string" ? launch.factory : null,
+        configRegistry:
+          typeof launch?.configRegistry === "string"
+            ? launch.configRegistry
+            : "0x6d043014972b87406C4757a5f2d655A24e0b0aF9",
+        feePolicy: typeof launch?.feePolicy === "string" ? launch.feePolicy : null,
+        weth: typeof weth === "string" && weth.startsWith("0x") ? weth : DEFAULT_OP_WETH,
+        protocolVersion: launch?.protocolVersion ?? 4,
+      };
+    }
+
+    function createV4CurveClient(curveAddress) {
+      if (!giwaContracts.factory) throw new Error("GIWA V4 launchFactory 누락");
+      const opts = { launchFactory: giwaContracts.factory };
+      if (giwaContracts.feePolicy) opts.feePolicy = giwaContracts.feePolicy;
+      return new sdkMod.AmmoraV4LaunchCurveClient(publicClient, curveAddress, opts);
+    }
+
+    async function resolveBaseTokenAddress(unit) {
+      if (!unit) return null;
+      if (publicClient && unit.curveAddress) {
+        for (const fnName of ["baseToken", "token"]) {
+          try {
+            const addr = await publicClient.readContract({
+              address: unit.curveAddress,
+              abi: CURVE_META_ABI,
+              functionName: fnName,
+            });
+            if (typeof addr === "string" && /^0x[a-fA-F0-9]{40}$/.test(addr)) {
+              if (addr.toLowerCase() !== unit.curveAddress.toLowerCase()) {
+                unit.tokenAddress = addr;
+                return addr;
+              }
+            }
+          } catch {}
+        }
+      }
+      return unit.tokenAddress && unit.tokenAddress.toLowerCase() !== unit.curveAddress?.toLowerCase()
+        ? unit.tokenAddress
+        : null;
+    }
+
+    async function refreshSelectedTokenBalance() {
+      if (!selected) {
+        heldTokenRaw = 0n;
+        elHoldingBalText.textContent = "HELD: -";
+        elQuoteHeldBal.textContent = "-";
+        return;
+      }
+
+      if (!address || !publicClient) {
+        heldTokenRaw = 0n;
+        elHoldingBalText.textContent = `HELD: 0.0000 ${selected.symbol}`;
+        elQuoteHeldBal.textContent = `0.0000 ${selected.symbol}`;
+        return;
+      }
+
+      try {
+        const baseAddr = await resolveBaseTokenAddress(selected);
+        if (!baseAddr) {
+          heldTokenRaw = 0n;
+          elHoldingBalText.textContent = `HELD: 0.0000 ${selected.symbol}`;
+          elQuoteHeldBal.textContent = `0.0000 ${selected.symbol}`;
+          return;
+        }
+
+        let dec = selected.decimals ?? 18;
+        try {
+          const d = await publicClient.readContract({ address: baseAddr, abi: ERC20_ABI, functionName: "decimals" });
+          if (d != null) {
+            dec = Number(d);
+            selected.decimals = dec;
+          }
+        } catch {}
+
+        const bal = await publicClient.readContract({
+          address: baseAddr,
+          abi: ERC20_ABI,
+          functionName: "balanceOf",
+          args: [address],
+        });
+
+        heldTokenRaw = typeof bal === "bigint" ? bal : BigInt(bal || "0");
+        heldTokenDecimals = dec;
+
+        const formatted = formatUnitsSafe(heldTokenRaw, dec);
+        elHoldingBalText.textContent = `HELD: ${formatted} ${selected.symbol}`;
+        elQuoteHeldBal.textContent = `${formatted} ${selected.symbol}`;
+        saveLocalCurves();
+      } catch (e) {
+        heldTokenRaw = 0n;
+        elHoldingBalText.textContent = `HELD: ERR (${selected.symbol})`;
+        elQuoteHeldBal.textContent = `조회 실패: ${e?.shortMessage ?? e?.message ?? "ERR"}`;
+      }
+    }
+
+    window.addEventListener("eip6963:announceProvider", (event) => {
+      const { info, provider } = event.detail || {};
+      if (info?.uuid && provider) {
+        discoveredWallets.set(info.uuid, { name: info.name || "EVM Wallet", provider });
+      }
+    });
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+
+    function getAvailableWallets() {
+      let list = Array.from(discoveredWallets.values());
+      if (list.length === 0) {
+        if (window.ethereum?.providers?.length) {
+          list = window.ethereum.providers.map((p, i) => ({
+            name: p.isMetaMask ? "MetaMask" : p.isBackpack ? "Backpack" : p.isRabby ? "Rabby" : `Wallet_${i + 1}`,
+            provider: p,
+          }));
+        } else if (window.ethereum) {
+          list = [{
+            name: window.ethereum.isMetaMask ? "MetaMask" : window.ethereum.isBackpack ? "Backpack" : "Injected Wallet",
+            provider: window.ethereum,
+          }];
+        }
+      }
+      return list.sort((a, b) => {
+        const am = /metamask/i.test(a.name) ? 0 : 1;
+        const bm = /metamask/i.test(b.name) ? 0 : 1;
+        return am - bm;
+      });
+    }
+
+    async function refreshWalletBalance() {
+      if (!activeProvider || !address) return;
+      try {
+        const balHex = await activeProvider.request({ method: "eth_getBalance", params: [address, "latest"] });
+        elWalletBalance.textContent = `${formatUnitsSafe(balHex, 18)} ETH`;
+        elWalletBalance.style.display = "inline";
+      } catch {}
+      await refreshSelectedTokenBalance();
+    }
+
+    async function ensureGiwaNetwork(provider) {
+      const currentChain = await provider.request({ method: "eth_chainId" }).catch(() => null);
+      if (String(currentChain || "").toLowerCase() === GIWA_CHAIN_ID_HEX) return;
+
+      try {
+        await provider.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: GIWA_CHAIN_ID_HEX }],
+        });
+      } catch (switchErr) {
+        if (switchErr?.code === 4902 || switchErr?.data?.originalError?.code === 4902) {
+          await provider.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: GIWA_CHAIN_ID_HEX,
+              chainName: "GIWA Sepolia",
+              nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+              rpcUrls: [GIWA_RPC_URL],
+              blockExplorerUrls: [EXPLORER_URL],
+            }],
+          });
+        } else {
+          throw switchErr;
+        }
+      }
+    }
+
+    async function requestExplicitWalletPermission(provider) {
+      try {
+        await provider.request({
+          method: "wallet_requestPermissions",
+          params: [{ eth_accounts: {} }],
+        });
+      } catch (permErr) {
+        if (permErr?.code === 4001) throw permErr;
+      }
+      const accounts = (await provider.request({ method: "eth_requestAccounts" })) || [];
+      if (!accounts.length) {
+        throw new Error("지갑에서 계정이 승인되지 않았습니다.");
+      }
+      return accounts[0];
+    }
+
+    async function ensureAuthorizedAccount(forceReauth = false) {
+      if (!activeProvider) throw new Error("지갑이 연결되지 않았습니다.");
+
+      let activeAddr = null;
+      if (forceReauth) {
+        activeAddr = await requestExplicitWalletPermission(activeProvider);
+      } else {
+        let accounts = [];
+        try {
+          accounts = (await activeProvider.request({ method: "eth_accounts" })) || [];
+        } catch {}
+        activeAddr = accounts.length ? accounts[0] : await requestExplicitWalletPermission(activeProvider);
+      }
+
+      if (!address || activeAddr.toLowerCase() !== address.toLowerCase()) {
+        address = activeAddr;
+        elBtnConnect.textContent = `[${address.slice(0, 6)}..${address.slice(-4)}]`;
+        pushLog("ok", `ACCOUNT_SYNCED (${activeWalletName}): ${address}`);
+        await refreshWalletBalance();
+      }
+
+      await ensureGiwaNetwork(activeProvider);
+      return address;
+    }
+
+    function bindProviderListeners(provider) {
+      if (!provider || typeof provider.on !== "function" || provider.__giwaListenersBound) return;
+      provider.__giwaListenersBound = true;
+
+      provider.on("accountsChanged", (accs) => {
+        if (provider !== activeProvider) return;
+        if (Array.isArray(accs) && accs.length > 0) {
+          address = accs[0];
+          elBtnConnect.textContent = `[${address.slice(0, 6)}..${address.slice(-4)}]`;
+          elBtnReauth.style.display = "inline-block";
+          pushLog("warn", `WALLET_ACCOUNT_CHANGED: ${address}`);
+          refreshWalletBalance();
+        } else {
+          address = null;
+          heldTokenRaw = 0n;
+          elBtnConnect.textContent = "[LINK_WALLET]";
+          elBtnReauth.style.display = "none";
+          elWalletBalance.style.display = "none";
+          pushLog("warn", "WALLET_DISCONNECTED");
+        }
+        updateUI();
+        refreshSelectedTokenBalance();
+      });
+
+      provider.on("chainChanged", (cid) => {
+        if (provider !== activeProvider) return;
+        if (String(cid || "").toLowerCase() === GIWA_CHAIN_ID_HEX) {
+          refreshWalletBalance();
+        }
+      });
+    }
+
+    async function connectWithProvider(walletName, provider) {
+      try {
+        elWalletPicker.style.display = "none";
+        pushLog("ok", `REQUESTING_PERMISSIONS: ${walletName}...`);
+        const addr = await requestExplicitWalletPermission(provider);
+        await ensureGiwaNetwork(provider);
+
+        activeProvider = provider;
+        activeWalletName = walletName;
+        address = addr;
+        bindProviderListeners(provider);
+
+        elBtnConnect.textContent = `[${addr.slice(0, 6)}..${addr.slice(-4)}]`;
+        elBtnReauth.style.display = "inline-block";
+        await refreshWalletBalance();
+        pushLog("ok", `WALLET_LINKED (${walletName}): ${addr}`);
+        updateUI();
+      } catch (e) {
+        pushLog("err", `WALLET_CONNECT_ERR: ${e?.message ?? "USER_REJECTED_OR_ERROR"}`);
+      }
+    }
+
+    async function handleManualReauth() {
+      if (!activeProvider) return;
+      try {
+        pushLog("warn", `RE-AUTHORIZING ${activeWalletName}...`);
+        const addr = await ensureAuthorizedAccount(true);
+        pushLog("ok", `RE-AUTH_SUCCESS: ${addr}`);
+        updateUI();
+      } catch (e) {
+        pushLog("err", `RE-AUTH_FAILED: ${e?.message ?? "REJECTED"}`);
+      }
+    }
+
+    function handleConnectClick() {
+      const wallets = getAvailableWallets();
+      if (wallets.length === 0) {
+        pushLog("err", "ERR_NO_PROVIDER: MetaMask 등 EVM 지갑 확장프로그램을 설치해 주세요.");
+        return;
+      }
+      if (wallets.length === 1) {
+        connectWithProvider(wallets[0].name, wallets[0].provider);
+        return;
+      }
+      elWalletPickerBtns.innerHTML = "";
+      wallets.forEach((w) => {
+        const b = document.createElement("button");
+        b.className = /metamask/i.test(w.name) ? "btn btn-active" : "btn btn-amber";
+        b.textContent = `[ ${w.name.toUpperCase()} ]`;
+        b.onclick = () => connectWithProvider(w.name, w.provider);
+        elWalletPickerBtns.appendChild(b);
+      });
+      elWalletPicker.style.display = "flex";
+      pushLog("warn", `SELECT_WALLET (${wallets.map((w) => w.name).join(", ")}) — 상단에서 지갑을 선택하세요.`);
+    }
+
+    async function initSdkModules() {
+      const viemUrls = [
+        "https://cdn.jsdelivr.net/npm/viem@2.21.0/+esm",
+        "https://esm.sh/viem@2.21.0",
+      ];
+      for (const url of viemUrls) {
+        try {
+          viemMod = await import(url);
+          break;
+        } catch {}
+      }
+
+      if (viemMod) {
+        const giwaChain = viemMod.defineChain({
+          id: GIWA_CHAIN_ID_NUM,
+          name: "GIWA Sepolia",
+          nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+          rpcUrls: { default: { http: [GIWA_RPC_URL] } },
+          blockExplorers: { default: { name: "GIWA Explorer", url: EXPLORER_URL } },
+          testnet: true,
+        });
+        publicClient = viemMod.createPublicClient({
+          chain: giwaChain,
+          transport: viemMod.http(GIWA_RPC_URL, {
+            batch: { wait: 80, batchSize: 10 },
+            retryCount: 3,
+            retryDelay: 1500,
+          }),
+        });
+      }
+
+      const sdkUrls = [
+        "https://cdn.jsdelivr.net/npm/@ammora-protocol/sdk@0.3.9/+esm",
+        "https://esm.sh/@ammora-protocol/sdk@0.3.9?bundle",
+      ];
+      for (const url of sdkUrls) {
+        try {
+          sdkMod = await import(url);
+          break;
+        } catch {}
+      }
+
+      if (sdkMod) {
+        giwaContracts = resolveGiwaContractsFromSdk(sdkMod);
+        elSdkStatus.textContent = `SDK: ONLINE (0.3.9 / V${giwaContracts.protocolVersion})`;
+        pushLog("ok", `V${giwaContracts.protocolVersion}_READY // FACTORY=${giwaContracts.factory?.slice(0, 10) ?? "MISSING"}..`);
+      } else {
+        elSdkStatus.textContent = "SDK: OFFLINE";
+        elSdkStatus.style.color = "var(--danger)";
+        pushLog("err", "SDK_LOAD_FAILED");
+      }
+
+      updateUI();
+      if (address && selected) {
+        await refreshSelectedTokenBalance();
+      }
+    }
+
+    function switchTab(nextTab) {
+      activeTab = nextTab;
+      updateUI();
+    }
+
+    function updateUI() {
+      elTabTrade.className = activeTab === "TRADE" ? "btn btn-active" : "btn";
+      elTabLaunch.className = activeTab === "LAUNCH" ? "btn btn-amber-active" : "btn btn-amber";
+      elViewTrade.style.display = activeTab === "TRADE" ? "block" : "none";
+      elViewLaunch.style.display = activeTab === "LAUNCH" ? "flex" : "none";
+
+      elBtnDeployCurve.disabled = !address || busy || !sdkMod;
+      elBtnDeployCurve.textContent = busy ? "DEPLOYING_ONCHAIN..." : "[ DEPLOY_V4_BONDING_CURVE() ]";
+
+      if (!selected) {
+        elSelectedSymbol.textContent = "NO_TARGET";
+        elHoldingBalText.textContent = "HELD: -";
+        elQuoteHeldBal.textContent = "-";
+        elExecEmpty.style.display = "block";
+        elExecPanel.style.display = "none";
+        return;
+      }
+
+      elSelectedSymbol.textContent = selected.symbol;
+      elExecEmpty.style.display = "none";
+      elExecPanel.style.display = "flex";
+
+      elBtnBuy.classList.toggle("btn-active", mode === "BUY");
+      elBtnSell.classList.toggle("btn-active", mode === "SELL");
+      elInputLabel.textContent = `INPUT_AMOUNT (${mode === "BUY" ? "ETH" : selected.symbol})`;
+      elQuoteFill.textContent = `${selected.progressPct.toFixed(1)}%`;
+      elQuoteCurveAddr.textContent = selected.curveAddress ?? selected.tokenAddress;
+
+      elBtnSwap.textContent = busy ? "TRANSMITTING..." : `[2. EXECUTE_${mode}]`;
+      elBtnSwap.disabled = !address || busy || selected.status === "GRADUATED" || !sdkMod;
+      elBtnQuote.disabled = busy || !sdkMod;
+
+      elBtnGraduate.disabled = !address || busy || (selected.status !== "READY_TO_MIGRATE" && !selected.isLocal) || !sdkMod;
+      elBtnGraduate.textContent =
+        selected.status === "READY_TO_MIGRATE" || selected.isLocal
+          ? "[ TRIGGER_GRADUATION_MIGRATE() ]"
+          : `LOCKED (${selected.status})`;
+    }
+
+    function renderTokenList() {
+      if (tokens.length === 0) {
+        elTokenList.innerHTML = `<div style="color:var(--amber); padding:16px 0; font-size:12px;">&gt; 등록된 커브가 없습니다. 우측 [+ NEW_CURVE]에서 새 본딩커브를 생성하세요.</div>`;
+        return;
+      }
+
+      elTokenList.innerHTML = "";
+      tokens.forEach((t) => {
+        const row = document.createElement("div");
+        row.className = `token-row ${selected?.curveAddress === t.curveAddress ? "active" : ""}`;
+        const badgeCls =
+          t.status === "READY_TO_MIGRATE" ? "ready" : t.status === "GRADUATED" ? "graduated" : "active";
+
+        row.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:6px;">
+            <strong>${t.symbol} <span style="color:var(--text-dim);">// ${t.name}</span></strong>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <span class="badge ${badgeCls}">${t.status}</span>
+              ${t.isLocal ? `<button class="btn btn-sm btn-danger btn-del-curve" data-addr="${t.curveAddress}" title="목록에서 제거">X</button>` : ""}
+            </div>
+          </div>
+          <div style="font-size:12px;">${renderAsciiBar(t.progressPct)}</div>
+          <div style="font-size:10px; color:var(--text-dim); margin-top:4px;">CURVE: ${t.curveAddress ?? t.tokenAddress}</div>
+        `;
+        row.onclick = async (ev) => {
+          if (ev.target.classList.contains("btn-del-curve")) {
+            ev.stopPropagation();
+            const delAddr = ev.target.getAttribute("data-addr").toLowerCase();
+            tokens = tokens.filter((x) => x.curveAddress.toLowerCase() !== delAddr);
+            if (selected?.curveAddress?.toLowerCase() === delAddr) selected = tokens[0] ?? null;
+            saveLocalCurves();
+            renderTokenList();
+            updateUI();
+            await refreshSelectedTokenBalance();
+            return;
+          }
+          selected = t;
+          activeTab = "TRADE";
+          elQuoteOutput.textContent = "-";
+          elPartialWarn.style.display = "none";
+          renderTokenList();
+          updateUI();
+          await refreshSelectedTokenBalance();
+        };
+        elTokenList.appendChild(row);
+      });
+    }
+
+    async function syncDataApiOptional() {
+      elBtnSyncApi.disabled = true;
+      elBtnSyncApi.textContent = "SYNCING...";
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 5000);
+        const r = await fetch(`${AMMORA_PROXY_URL}/v1/tokens?chainId=${GIWA_CHAIN_ID_NUM}`, { signal: controller.signal });
+        clearTimeout(timer);
+        if (!r.ok) throw new Error(`HTTP_${r.status}`);
+        const res = await r.json();
+        const list = Array.isArray(res) ? res : res?.items ?? res?.launches ?? res?.tokens ?? [];
+        const fetched = list.map((item, idx) => ({
+          tokenAddress: item.tokenAddress ?? item.baseToken ?? item.address,
+          curveAddress: item.curveAddress ?? item.poolAddress ?? item.launchAddress ?? item.address,
+          name: item.name ?? `UNIT_${idx + 1}`,
+          symbol: item.symbol ?? `TKN${idx + 1}`,
+          decimals: Number(item.decimals ?? 18),
+          progressPct: Math.min(100, Math.max(0, Number(item.graduationProgressPct ?? item.progressPct ?? 0))),
+          status: item.migrated ? "GRADUATED" : item.readyToMigrate ? "READY_TO_MIGRATE" : "ACTIVE",
+          isLocal: false,
+        }));
+        const locals = tokens.filter((t) => t.isLocal);
+        const merged = [...locals];
+        fetched.forEach((f) => {
+          if (!merged.some((m) => m.curveAddress?.toLowerCase() === f.curveAddress?.toLowerCase())) merged.push(f);
+        });
+        tokens = merged;
+        if (tokens.length > 0 && !selected) selected = tokens[0];
+        renderTokenList();
+        updateUI();
+        await refreshSelectedTokenBalance();
+        pushLog("ok", `DATA_API_SYNCED: ${fetched.length} CURVES`);
+      } catch (e) {
+        pushLog("warn", `DATA_API_OFFLINE (${e?.name === "AbortError" ? "TIMEOUT" : e?.message}) — 로컬 커브를 사용하세요.`);
+      } finally {
+        elBtnSyncApi.disabled = false;
+        elBtnSyncApi.textContent = "[SYNC_API]";
+      }
+    }
+
+    function addLocalCurveUnit(unit) {
+      tokens = [
+        unit,
+        ...tokens.filter((t) => t.curveAddress?.toLowerCase() !== unit.curveAddress?.toLowerCase()),
+      ];
+      selected = unit;
+      saveLocalCurves();
+      renderTokenList();
+      activeTab = "TRADE";
+      updateUI();
+      refreshSelectedTokenBalance();
+    }
+
+    function handleLoadManualCurve() {
+      const addr = elInputManual.value.trim();
+      if (!/^0x[a-fA-F0-9]{40}$/.test(addr)) {
+        pushLog("err", "INVALID_ADDRESS: 0x로 시작하는 42자리 EVM 주소를 입력하세요.");
+        return;
+      }
+      addLocalCurveUnit({
+        tokenAddress: addr,
+        curveAddress: addr,
+        name: "DIRECT_ONCHAIN_CURVE",
+        symbol: `UNIT_${addr.slice(2, 6).toUpperCase()}`,
+        decimals: 18,
+        progressPct: 0,
+        status: "ACTIVE",
+        isLocal: true,
+      });
+      elInputManual.value = "";
+      pushLog("ok", `DIRECT_CURVE_LOADED: ${addr}`);
+    }
+
+    function extractRevertReason(err) {
+      const candidates = [
+        err?.cause?.reason,
+        err?.cause?.shortMessage,
+        err?.cause?.data?.message,
+        err?.cause?.data?.errorName,
+        err?.shortMessage,
+        err?.details,
+        err?.message,
+      ];
+      for (const c of candidates) {
+        if (typeof c === "string" && c.trim() && !c.includes("Execution reverted for an unknown reason")) {
+          return c.trim();
+        }
+      }
+      return "Execution reverted on-chain";
+    }
+
+    async function sendTxViaProvider(tx, fallbackTo = null) {
+      const targetTo = tx.to ?? fallbackTo;
+      if (!targetTo) throw new Error("TX_TARGET_ADDRESS_MISSING");
+
+      const fromAddr = await ensureAuthorizedAccount(false);
+      const valBig = BigInt(tx.value ?? 0n);
+
+      let gasHex;
+      if (publicClient) {
+        try {
+          const est = await publicClient.estimateGas({
+            account: fromAddr,
+            to: targetTo,
+            data: tx.data,
+            value: valBig,
+          });
+          const buffered = (est * 125n) / 100n + 25000n;
+          const capped = buffered > 6_000_000n ? 6_000_000n : buffered;
+          gasHex = toHexValue(capped);
+        } catch (simErr) {
+          throw new Error(`PREFLIGHT_REVERT: ${extractRevertReason(simErr)}`);
+        }
+      }
+
+      const txParam = {
+        from: fromAddr,
+        to: targetTo,
+        data: tx.data,
+        value: toHexValue(valBig),
+        ...(gasHex ? { gas: gasHex } : {}),
+      };
+
+      try {
+        return await activeProvider.request({
+          method: "eth_sendTransaction",
+          params: [txParam],
+        });
+      } catch (err) {
+        if (err?.code === 4100 || String(err?.message || "").includes("4100") || String(err?.message || "").includes("not been authorized")) {
+          pushLog("warn", "AUTH_4100 — 지갑 계정 권한을 다시 요청합니다...");
+          const refreshedAddr = await ensureAuthorizedAccount(true);
+          return await activeProvider.request({
+            method: "eth_sendTransaction",
+            params: [{ ...txParam, from: refreshedAddr }],
+          });
+        }
+        throw err;
+      }
+    }
+
+    async function executeUnsignedPlan(plan, label = "TX", fallbackTo = null) {
+      if (!plan) throw new Error("EMPTY_PLAN");
+      const hashes = [];
+      let lastReceipt = null;
+
+      const approvals = plan.approvalRequirements ?? (plan.approvalRequirement ? [plan.approvalRequirement] : []);
+      for (const req of approvals) {
+        if (req?.to && req?.data) {
+          const h = await sendTxViaProvider(req);
+          pushLog("ok", `${label}_APPROVE_SENT`, h);
+          lastReceipt = await publicClient.waitForTransactionReceipt({ hash: h });
+          hashes.push(h);
+        }
+      }
+
+      const stepList = plan.transactions ?? plan.steps ?? null;
+      if (Array.isArray(stepList) && stepList.length > 0) {
+        for (let i = 0; i < stepList.length; i++) {
+          const item = stepList[i]?.transaction ?? stepList[i];
+          if (item?.data) {
+            const h = await sendTxViaProvider(item, fallbackTo);
+            pushLog("ok", `${label}_STEP_${i + 1}_SENT`, h);
+            lastReceipt = await publicClient.waitForTransactionReceipt({ hash: h });
+            hashes.push(h);
+          }
+        }
+        return { hashes, lastReceipt };
+      }
+
+      const tx = plan.transaction ?? plan.tx ?? plan;
+      if (tx?.data) {
+        const h = await sendTxViaProvider(tx, fallbackTo);
+        pushLog("ok", `${label}_SENT`, h);
+        lastReceipt = await publicClient.waitForTransactionReceipt({ hash: h });
+        hashes.push(h);
+      }
+      return { hashes, lastReceipt };
+    }
+
+    async function ensureCurveSwapReady({ curveAddress, activeAddr, amountIn, isSell }) {
+      let inputToken = null;
+      try {
+        inputToken = await publicClient.readContract({
+          address: curveAddress,
+          abi: CURVE_META_ABI,
+          functionName: isSell ? "baseToken" : "quoteToken",
+        });
+      } catch {
+        inputToken = isSell ? selected?.tokenAddress : giwaContracts.weth;
+      }
+
+      if (!inputToken || !/^0x[a-fA-F0-9]{40}$/.test(inputToken)) return;
+
+      let bal = 0n;
+      try {
+        bal = await publicClient.readContract({
+          address: inputToken,
+          abi: ERC20_ABI,
+          functionName: "balanceOf",
+          args: [activeAddr],
+        });
+      } catch {}
+
+      if (bal < amountIn) {
+        if (!isSell) {
+          const deficit = amountIn - bal;
+          pushLog("warn", `AUTO_PREP [1/3]: 결제용 WETH가 부족해 ${formatUnitsSafe(deficit, 18)} ETH를 자동 변환합니다...`);
+          const depData = viemMod.encodeFunctionData({ abi: ERC20_ABI, functionName: "deposit" });
+          const wrapHash = await sendTxViaProvider({ to: inputToken, data: depData, value: deficit });
+          pushLog("ok", "AUTO_WRAP_SENT", wrapHash);
+          await publicClient.waitForTransactionReceipt({ hash: wrapHash });
+        } else {
+          throw new Error(`보유 ${selected?.symbol ?? "토큰"} 잔액이 부족합니다. (보유: ${formatUnitsSafe(bal, selected?.decimals ?? 18)})`);
+        }
+      }
+
+      let allowance = 0n;
+      try {
+        allowance = await publicClient.readContract({
+          address: inputToken,
+          abi: ERC20_ABI,
+          functionName: "allowance",
+          args: [activeAddr, curveAddress],
+        });
+      } catch {}
+
+      const approveTarget = amountIn > 0n ? amountIn * 100n : amountIn;
+      if (allowance < amountIn) {
+        pushLog("warn", `AUTO_PREP [2/3]: 커브 컨트랙트 토큰 사용 승인(Approve)을 진행합니다...`);
+        const appData = viemMod.encodeFunctionData({
+          abi: ERC20_ABI,
+          functionName: "approve",
+          args: [curveAddress, approveTarget],
+        });
+        const appHash = await sendTxViaProvider({ to: inputToken, data: appData, value: 0n });
+        pushLog("ok", "AUTO_APPROVE_SENT", appHash);
+        await publicClient.waitForTransactionReceipt({ hash: appHash });
+      }
+    }
+
+    function extractDeployedAddressesFromReceipt(receipt, factoryAddress = "") {
+      if (typeof sdkMod?.parseAmmoraV4LaunchCreatedReceipt === "function" && receipt) {
+        try {
+          const parsed = sdkMod.parseAmmoraV4LaunchCreatedReceipt(receipt, factoryAddress);
+          const curve = parsed?.curve ?? parsed?.launchCurve ?? parsed?.pool ?? parsed?.curveAddress ?? null;
+          const token = parsed?.token ?? parsed?.baseToken ?? parsed?.tokenAddress ?? null;
+          if (curve || token) return { curveAddress: curve ?? token, tokenAddress: token ?? curve };
+        } catch {}
+      }
+
+      if (!receipt?.logs?.length) return { curveAddress: null, tokenAddress: null };
+      const factoryLow = String(factoryAddress || "").toLowerCase();
+      const candidates = [];
+      for (const log of receipt.logs) {
+        if (log.address && log.address.toLowerCase() !== factoryLow) candidates.push(log.address);
+      }
+      const unique = [...new Set(candidates.map((a) => a.toLowerCase()))];
+      return { curveAddress: unique[0] ?? null, tokenAddress: unique[1] ?? unique[0] ?? null };
+    }
+
+    function findV4FactoryAbi(mod) {
+      const preferred = ["ammoraV4LaunchFactoryAbi", "v4LaunchFactoryAbi", "launchFactoryV4Abi", "launchFactoryAbi"];
+      for (const key of preferred) {
+        if (Array.isArray(mod[key]) && mod[key].some((x) => x?.type === "function" && /createLaunch/i.test(x?.name || ""))) {
+          return { key, abi: mod[key] };
+        }
+      }
+      for (const [key, val] of Object.entries(mod)) {
+        if (/abi$/i.test(key) && /v4.*launch|launch.*v4/i.test(key) && Array.isArray(val)) {
+          if (val.some((x) => x?.type === "function" && /createLaunch/i.test(x?.name || ""))) return { key, abi: val };
+        }
+      }
+      return null;
+    }
+
+    async function handleDeployCurve() {
+      if (!activeProvider || !address || !sdkMod || !publicClient) return;
+      const configIdNum = Number(elLaunchConfigId.value || "1");
+      if (configIdNum === 6) {
+        pushLog("err", "CONFIG #6은 차단되었습니다. #1, #2, #10을 사용하세요.");
+        return;
+      }
+
+      const configId = BigInt(configIdNum);
+      const name = elLaunchName.value.trim() || "ROBOT_UNIT_01";
+      const symbol = elLaunchSymbol.value.trim().toUpperCase() || "RBT01";
+      const decimals = Number(elLaunchDecimals.value || "18");
+      const metadataUri = `https://ammora.giwa.local/${symbol.toLowerCase()}.json`;
+
+      busy = true;
+      updateUI();
+      pushLog("ok", `V4_LAUNCH_INIT: ${name} (${symbol}) // CONFIG=#${configId}`);
+
+      try {
+        const activeAddr = await ensureAuthorizedAccount(false);
+        const { factory } = giwaContracts;
+        const found = findV4FactoryAbi(sdkMod);
+        if (!factory || !found) throw new Error("V4 Factory 또는 ABI를 찾지 못했습니다.");
+
+        const fnItem =
+          found.abi.find((x) => x?.type === "function" && x?.name === "createLaunch") ??
+          found.abi.find((x) => x?.type === "function" && /createLaunch/i.test(x?.name || ""));
+
+        const inputs = fnItem.inputs ?? [];
+        let args;
+        if (inputs.length === 1 && inputs[0].type === "tuple") {
+          const structObj = {};
+          for (const comp of inputs[0].components ?? []) {
+            const n = comp.name || "";
+            if (/configId/i.test(n)) structObj[n] = configId;
+            else if (/name/i.test(n)) structObj[n] = name;
+            else if (/symbol/i.test(n)) structObj[n] = symbol;
+            else if (/uri|meta/i.test(n)) structObj[n] = metadataUri;
+            else if (/decimal/i.test(n)) structObj[n] = Number(decimals);
+            else if (/creator|owner|recipient/i.test(n)) structObj[n] = activeAddr;
+            else if (/salt/i.test(n)) structObj[n] = "0x" + "0".repeat(64);
+            else if (/uint/i.test(comp.type)) structObj[n] = 0n;
+            else if (/address/i.test(comp.type)) structObj[n] = activeAddr;
+            else if (/bool/i.test(comp.type)) structObj[n] = false;
+            else structObj[n] = "";
+          }
+          args = [structObj];
+        } else {
+          args = inputs.map((inp) => {
+            const n = inp.name || "";
+            if (/configId/i.test(n)) return configId;
+            if (/name/i.test(n)) return name;
+            if (/symbol/i.test(n)) return symbol;
+            if (/uri|meta/i.test(n)) return metadataUri;
+            if (/decimal/i.test(n)) return Number(decimals);
+            if (/creator|owner|recipient/i.test(n)) return activeAddr;
+            if (/bytes32/i.test(inp.type)) return "0x" + "0".repeat(64);
+            if (/uint/i.test(inp.type)) return 0n;
+            if (/address/i.test(inp.type)) return activeAddr;
+            if (/bool/i.test(inp.type)) return false;
+            return "";
+          });
+        }
+
+        const data = viemMod.encodeFunctionData({ abi: found.abi, functionName: fnItem.name, args });
+        const exec = await executeUnsignedPlan({ to: factory, data, value: 0n }, "V4_LAUNCH", factory);
+        const parsed = extractDeployedAddressesFromReceipt(exec.lastReceipt, factory);
+
+        if (parsed.curveAddress) {
+          addLocalCurveUnit({
+            tokenAddress: parsed.tokenAddress ?? parsed.curveAddress,
+            curveAddress: parsed.curveAddress,
+            name,
+            symbol,
+            decimals,
+            progressPct: 0.0,
+            status: "ACTIVE",
+            isLocal: true,
+          });
+          pushLog("ok", `NEW_V4_CURVE_REGISTERED: ${symbol} @ ${parsed.curveAddress}`);
+        }
+        await refreshWalletBalance();
+      } catch (e) {
+        pushLog("err", `LAUNCH_FAILED: ${e?.shortMessage ?? e?.message}`);
+      } finally {
+        busy = false;
+        updateUI();
+      }
+    }
+
+    async function handleQuote() {
+      if (!sdkMod || !publicClient || !selected?.curveAddress) return;
+      try {
+        await refreshSelectedTokenBalance();
+        const curveClient = createV4CurveClient(selected.curveAddress);
+        const blockNumber = await publicClient.getBlockNumber();
+        const isSell = mode === "SELL";
+        const inDec = isSell ? (selected.decimals ?? 18) : 18;
+        const outDec = isSell ? 18 : (selected.decimals ?? 18);
+        const amountIn = parseUnitsSafe(elInputAmount.value, inDec);
+
+        const quote = await curveClient.quoteExactInputAtBlock(amountIn, isSell, blockNumber);
+        const fill = sdkMod.classifyAmmoraV4ExactInputFill(quote, isSell);
+        const out = quote?.amountOut ?? quote?.outputAmount ?? quote?.expectedOutput ?? quote?.expectedAmountOut ?? 0n;
+
+        elQuoteOutput.textContent = `${formatUnitsSafe(out, outDec)} ${isSell ? "ETH" : selected.symbol}`;
+        elPartialWarn.style.display = fill?.allowPartialFill ? "block" : "none";
+        pushLog(
+          fill?.allowPartialFill ? "warn" : "ok",
+          `QUOTE_OK: EST_OUT=${formatUnitsSafe(out, outDec)} ${isSell ? "ETH" : selected.symbol} // HELD=${formatUnitsSafe(heldTokenRaw, heldTokenDecimals)} ${selected.symbol}`
+        );
+      } catch (e) {
+        elQuoteOutput.textContent = "ERR";
+        pushLog("err", `QUOTE_ERR: ${e?.shortMessage ?? e?.message}`);
+      }
+    }
+
+    async function handleSwap() {
+      if (!activeProvider || !address || !selected?.curveAddress || !sdkMod || !publicClient) return;
+      busy = true;
+      updateUI();
+      try {
+        const activeAddr = await ensureAuthorizedAccount(false);
+        const curveClient = createV4CurveClient(selected.curveAddress);
+        const isSell = mode === "SELL";
+        const inDec = isSell ? (selected.decimals ?? 18) : 18;
+        const amountIn = parseUnitsSafe(elInputAmount.value, inDec);
+
+        await ensureCurveSwapReady({
+          curveAddress: selected.curveAddress,
+          activeAddr,
+          amountIn,
+          isSell,
+        });
+
+        pushLog("ok", `EXECUTING_SWAP [3/3]: ${mode} ${elInputAmount.value}...`);
+        const latestBlock = await publicClient.getBlock({ blockTag: "latest" });
+        const blockNumber = latestBlock.number;
+        const quote = await curveClient.quoteExactInputAtBlock(amountIn, isSell, blockNumber);
+        const fill = sdkMod.classifyAmmoraV4ExactInputFill(quote, isSell);
+
+        if (fill?.kind === "terminal-dust" || fill?.classification === "terminal-dust") {
+          throw new Error("TERMINAL_DUST: 아래 졸업(MIGRATE) 버튼을 실행하세요.");
+        }
+
+        const chainNow = Number(latestBlock.timestamp || Math.floor(Date.now() / 1000));
+        const deadline = BigInt(chainNow + 3600);
+
+        const plan = await curveClient.planSwapExactInput({
+          includedAmountIn: amountIn,
+          baseForQuote: isSell,
+          allowPartialFill: Boolean(fill?.allowPartialFill),
+          slippageBps: 500,
+          recipient: activeAddr,
+          deadline,
+        });
+
+        await executeUnsignedPlan(plan, mode, selected.curveAddress);
+
+        if (fill?.allowPartialFill) {
+          selected.progressPct = 100;
+          selected.status = "READY_TO_MIGRATE";
+          saveLocalCurves();
+          renderTokenList();
+          pushLog("warn", "GRADUATION_BOUNDARY_HIT — 이제 하단 [TRIGGER_GRADUATION_MIGRATE()] 버튼을 실행하세요.");
+        }
+        await refreshWalletBalance();
+      } catch (e) {
+        pushLog("err", `SWAP_FAILED: ${e?.shortMessage ?? e?.message}`);
+      } finally {
+        busy = false;
+        updateUI();
+      }
+    }
+
+    async function handleGraduate() {
+      if (!activeProvider || !address || !selected?.curveAddress || !sdkMod || !publicClient) return;
+      busy = true;
+      updateUI();
+      try {
+        await ensureAuthorizedAccount(false);
+        const curveClient = createV4CurveClient(selected.curveAddress);
+        const blockNumber = await publicClient.getBlockNumber();
+        const plan = await curveClient.planMigrateAtBlock(blockNumber);
+        await executeUnsignedPlan(plan, "GRADUATE", selected.curveAddress);
+
+        selected.progressPct = 100;
+        selected.status = "GRADUATED";
+        saveLocalCurves();
+        renderTokenList();
+        await refreshWalletBalance();
+        pushLog("ok", `UNIT_${selected.symbol} GRADUATION_COMPLETE!`);
+      } catch (e) {
+        pushLog("err", `MIGRATE_FAILED: ${e?.shortMessage ?? e?.message}`);
+      } finally {
+        busy = false;
+        updateUI();
+      }
+    }
+
+    elBtnConnect.onclick = handleConnectClick;
+    elBtnReauth.onclick = handleManualReauth;
+    elBtnSyncApi.onclick = syncDataApiOptional;
+    elBtnLoadManual.onclick = handleLoadManualCurve;
+    elTabTrade.onclick = () => switchTab("TRADE");
+    elTabLaunch.onclick = () => switchTab("LAUNCH");
+    elBtnBuy.onclick = () => { mode = "BUY"; updateUI(); };
+    elBtnSell.onclick = () => { mode = "SELL"; updateUI(); };
+    elBtnQuote.onclick = handleQuote;
+    elBtnSwap.onclick = handleSwap;
+    elBtnGraduate.onclick = handleGraduate;
+    elBtnDeployCurve.onclick = handleDeployCurve;
+
+    document.querySelectorAll(".cfg-preset").forEach((btn) => {
+      btn.onclick = () => { elLaunchConfigId.value = btn.getAttribute("data-id"); };
+    });
+
+    pushLog("ok", "AMMORA_UNIT ONLINE // GIWA_SEPOLIA (91342)");
+    renderTokenList();
+    updateUI();
+    initSdkModules();
+  </script>
+</body>
+</html>
